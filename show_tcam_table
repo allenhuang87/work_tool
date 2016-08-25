@@ -9,7 +9,7 @@ RDATA2_ADDR=0xc7005048
 RDATA1_ADDR=0xc700504c
 RDATA0_ADDR=0xc7005050
 
-devmem=/sbin/devmem
+devmem="/bin/busybox devmem"
 write_index()
 {
 	$devmem $entry_addr w $1
@@ -33,7 +33,7 @@ if [ "$data_high" = "0x00000000" -a "$data_low" = "0x00000000" ];then
 	echo "No more entry!!"
 	exit
 fi
-	echo "$data_high $data_low $rdata4 $rdata3 $rdata2 $rdata1 $rdata0"
+	echo "[$1] $data_high $data_low $rdata4 $rdata3 $rdata2 $rdata1 $rdata0"
 }
 main()
 {
@@ -42,7 +42,7 @@ while true
 do
 write_index $i
 produce_puls
-show
+show $i
 i=$(($i + 1 ))
 if [ $i -gt 511 ];then
 break
