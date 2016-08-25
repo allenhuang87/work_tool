@@ -1,0 +1,27 @@
+#!/bin/bash
+usage()
+{
+	echo "$0 board_type start_irq_number"
+	echo "For example:"
+	echo "	$0 d02 70"
+	exit -1
+}
+if [ $# != 2 ]; then
+usage
+fi
+if [ "$1" = "d02" ];then
+step=2
+else if [ "$1" = "d03" ];then
+step=3
+else
+usage
+fi
+fi
+irq=$2
+list="1 2 4 8 10 20 40 80 100 200 400 800 1000 2000 4000 8000"
+for i in $list
+do 
+echo $i > /proc/irq/$irq/smp_affinity
+echo $i > /proc/irq/$(($irq + 1))/smp_affinity
+irq=$(($irq + $step))
+done
