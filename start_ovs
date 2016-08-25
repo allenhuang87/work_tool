@@ -1,0 +1,84 @@
+#!/bin/bash
+#author: Huang Daode
+#date: 2016-08-17
+br_name=br-int
+veth0_ip=10.1.1.1/24
+veth2_ip=20.1.1.1/24
+Veth4_ip=30.1.1.1/24
+remote_ip1=192.168.20.5
+remote_ip2=192.168.1.188
+key1=1000
+key2=2000
+key3=3000
+dst_port=4789
+
+start_ovs(){
+rm -rf /usr/local/etc/openvswitch/conf.db
+rm -rf /usr/local/var/run/openvswitch/*
+ovsdb-tool create /usr/local/etc/openvswitch/conf.db /usr/local/share/openvswitch/vswitch.ovsschema
+ovsdb-server /usr/local/etc/openvswitch/conf.db --remote=punix:/usr/local/var/run/openvswitch/db.sock --pidfile --detach
+ovs-vsctl --no-wait init
+ovs-vswitchd --pidfile --detach
+}
+add_netns_eth(){
+# netns veth0 veth1 veth0_ip
+netnamespace=$1
+veth_name=$2
+veth_peer_name=$3
+veth_name_ip=$4
+ip link add $veth_name type veth peer name $veth_peer_name
+ip link set $veth_name netns $netnamespace
+ip netns exec $netnamespace ip addr add $veth_name_ip dev $veth_name
+ip netns exec $netnamespace ip link set $veth_name up
+}
+add_ovs_port()
+{
+#bridge_name veth_name vlan_tag
+br_name=$1
+port_name=$2
+vlan_tag=$3
+ovs-vsctl add-port $br_name $port_name
+ip link set $port_name up
+#set vlan
+if [ "$vlan_tag" != "" ];then
+ovs-vsctl set port $port_name tag=$vlan_tag
+fi
+}
+add_ovs_vxlan()
+{
+#br_name port_name remote_ip key dst_port
+br_name=$1
+port_name=$2
+remote_ip=$3
+key=$4
+dst_port=$5
+if [ "$key" != "" -a "$dst_port" != "" ];then
+opt="options:remote_ip=$remote_ip options:key=$key options:dst_port=$dst_port"
+else
+opt="options:remote_ip=$remote_ip"
+fi
+ovs-vsctl add-port $br_name $port_name -- set interface $port_name type=vxlan $opt
+}
+usage()
+{
+echo "$0 veth0_ip veth1_ip veth3_ip remote1_ip remote2_ip vni_key1 vni_key2 vni_key3 dts_port"
+echo "$0 10.1.1.1/24 20.1.1.1/24 30.1.1.1/24 192.168.1.118 192.168.2.5 1000 2000 4789"
+exit -1
+}
+main()
+{
+start_ovs
+ip netns add red
+add_netns_eth red veth0 veth1 $veth0_ip 
+add_netns_eth red veth2 veth3 $veth2_ip 
+add_netns_eth red veth4 veth5 $veth4_ip 
+if [ "$br_name" != "`ovs-vsctl show |grep Bridge|awk '{print $2}'`" ];then
+	ovs-vsctl add-br $br_name
+fi
+add_ovs_port $br_name veth1
+add_ovs_port $br_name veth3
+add_ovs_port $br_name veth5
+add_ovs_vxlan $br_name vxlan0 $remote_ip1 $key1 $dst_port
+add_ovs_vxlan $br_name vxlan10 $remote_ip2 $key2 $dst_port
+}
+main
