@@ -1,0 +1,7 @@
+ip link add br0 type bridge
+ip tuntap add tap0 mode tap user `whoami`
+ip link set br0 up
+ip link set tap0 up
+ip link set eth41 master br0 
+ip link set tap0 master br0
+qemu-system-aarch64 -m 1024 -cpu cortex-a57 -M virt -nographic -kernel Image -initrd mini-rootfs-arm64.cpio.gz -device virtio-net-device,netdev=net0 -netdev tap,id=net0,script=no,downscript=no,ifname=tap0
