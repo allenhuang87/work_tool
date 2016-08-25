@@ -1,0 +1,52 @@
+#!/bin/sh
+entry_addr=0xc700500c
+puls_addr=0xc70050a0
+tcam_high_addr=0xc7005038
+tcam_low_addr=0xc700503c
+RDATA4_ADDR=0xc7005040
+RDATA3_ADDR=0xc7005044
+RDATA2_ADDR=0xc7005048
+RDATA1_ADDR=0xc700504c
+RDATA0_ADDR=0xc7005050
+
+devmem=/sbin/devmem
+write_index()
+{
+	$devmem $entry_addr w $1
+}
+produce_puls()
+{
+	$devmem $puls_addr w 0x20
+	sleep 1
+	$devmem $puls_addr w 0x0
+}
+show()
+{
+data_high=`$devmem $tcam_high_addr`
+data_low=`$devmem $tcam_low_addr`
+rdata4=`$devmem $RDATA4_ADDR`
+rdata3=`$devmem $RDATA3_ADDR`
+rdata2=`$devmem $RDATA2_ADDR`
+rdata1=`$devmem $RDATA1_ADDR`
+rdata0=`$devmem $RDATA0_ADDR`
+if [ "$data_high" = "0x00000000" -a "$data_low" = "0x00000000" ];then
+	echo "No more entry!!"
+	exit
+fi
+	echo "$data_high $data_low $rdata4 $rdata3 $rdata2 $rdata1 $rdata0"
+}
+main()
+{
+i=0
+while true
+do
+write_index $i
+produce_puls
+show
+i=$(($i + 1 ))
+if [ $i -gt 511 ];then
+break
+fi
+done
+}
+main
