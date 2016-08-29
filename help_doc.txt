@@ -1,0 +1,6 @@
+*how to use submodule*
+	git checkout origin/branch-name1
+	git submodule init
+	git submodule update
+
+
