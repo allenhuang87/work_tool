@@ -2,5 +2,6 @@
 	git checkout origin/branch-name1
 	git submodule init
 	git submodule update
-
+排序并显示出现的次数
+sed -f namestate list|awk -F, '{print $4}'|sort|uniq -c
 
