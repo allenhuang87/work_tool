@@ -7,3 +7,5 @@ sed -f namestate list|awk -F, '{print $4}'|sort|uniq -c
 linux下编译成静态库的方法
 将编译参数改为：
 -Lliemenu -lpthread -static 
+#解决securecrt, xshell中menuconfig乱码问题
+	export TERM=xterm-color
