@@ -1,4 +1,7 @@
 #!/bin/sh
+#date:2016-09-28
+#author: Daode Huang <allenhuangsz10@gmail.com>
+#usage: show tcam table for develop boards
 entry_addr=0xc700500c
 puls_addr=0xc70050a0
 tcam_high_addr=0xc7005038
@@ -34,6 +37,13 @@ if [ "$data_high" = "0x00000000" -a "$data_low" = "0x00000000" ];then
 	exit
 fi
 	echo "[$1] $data_high $data_low $rdata4 $rdata3 $rdata2 $rdata1 $rdata0"
+}
+usage()
+{
+echo "This script is used to show the tcam and forwarding table"
+echo "on arm64 develop boards for network subsystem"
+echo "Usage: $0  [Num]"
+echo "		Num: the number of entries that will be displayed"
 }
 main()
 {
