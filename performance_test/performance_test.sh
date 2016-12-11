@@ -1,44 +1,68 @@
 #!/bin/sh
 if [ $# = 0 ];then
-test=all;
+	test_type=all;
 else
-test="$1"
+	test_type="$1"
 fi
 usage()
 {
 	echo "$0 all | iperf | qperf | netperf"
 }
 
+prepare_log_dir()
+{
+	if [ ! -d $LOG_DIR ]; then
+		mkdir $LOG_DIR
+	fi
+	for log_type in iperf_log qperf_log netperf_log
+	do
+		if [ ! -d $LOG_DIR/$log_type ]; then 
+			mkdir $LOG_DIR/$log_type
+		fi
+	done
+}
+
 . conf/performance.conf
 
- case $test in 
+#check the log directory is existed or not.
+#if not, create it
+prepare_log_dir
+
+ case $test_type in 
 "all")
-	echo "test iperf"
+	echo "testing  iperf ..."
 	./iperf_test $IP_LOOP_NUM $IP_TEST_DURATION $IP_THREADS 
-	echo "test qperf"
-	./qperf_test.sh 2 -H $NP_SRV_IP $QP_OPTS
-	echo "test netperf"
-	./netperf_test.sh 2 tcp_stream "-t TCP_STREAM -H 192.168.10.14 -l 60 -- -m 2048"
-	./netperf_test.sh 2 udp_stream "-t UDP_STREAM -H 192.168.10.14 -l 60 -- -m 2048"
-	./netperf_test.sh 2 tcp_rr "-t TCP_RR -H 192.168.10.14 -l 60 -- -r 64,1024"
-	./netperf_test.sh 2 tcp_crr "-t TCP_CRR -H 192.168.10.14 -l 60 -- -r 64,1024"
-	./netperf_test.sh 2 udp_rr "-t UDP_RR -H 192.168.10.14 -l 60 -- -r 64,1024"
+	echo "testing  qperf ..."
+	./qperf_test.sh $NP_LOOP_NUM $QP_SRV_IP $QP_OPTS
+	echo "testing  netperf ..."
+	for type in TCP_STREAM UDP_STREAM
+	do
+	./netperf_test.sh $QP_LOOP_NUM tcp_stream "-t $type -H $NP_SRV_IP -l 60 -- -m 2048"
+	done
+	for type in TCP_RR TCP_CRR UDP_RR
+	do
+	./netperf_test.sh $QP_LOOP_NUM $type "-t $type -H $NP_SRV_IP -l 60 -- -r 64,1024"
+	done
+	echo "performance test is finished!"
 ;;
 "iperf")
-	echo "test iperf"
-	./iperf_test 5 100 1 
+	echo "testing  iperf ..."
+	./iperf_test $IP_LOOP_NUM $IP_TEST_DURATION $IP_THREADS 
 ;;
 "qperf")
 	echo "test qperf"
-	./qperf_test.sh 2 "-oo msg_size:1:64K:*2 192.168.10.14 tcp_bw tcp_lat"
+	./qperf_test.sh $NP_LOOP_NUM $QP_SRV_IP $QP_OPTS
 ;;
 "netperf")
 	echo "test netperf"
-	./netperf_test.sh 2 tcp_stream "-t TCP_STREAM -H 192.168.10.14 -l 60 -- -m 2048"
-	./netperf_test.sh 2 udp_stream "-t UDP_STREAM -H 192.168.10.14 -l 60 -- -m 2048"
-	./netperf_test.sh 2 tcp_rr "-t TCP_RR -H 192.168.10.14 -l 60 -- -r 64,1024"
-	./netperf_test.sh 2 tcp_crr "-t TCP_CRR -H 192.168.10.14 -l 60 -- -r 64,1024"
-	./netperf_test.sh 2 udp_rr "-t UDP_RR -H 192.168.10.14 -l 60 -- -r 64,1024"
+	for type in TCP_STREAM UDP_STREAM
+	do
+		./netperf_test.sh $QP_LOOP_NUM $type "-t $type -H $NP_SRV_IP -l 60 -- -m 2048"
+	done
+	for type in TCP_RR TCP_CRR UDP_RR
+	do
+		./netperf_test.sh $QP_LOOP_NUM $type "-t $type -H $NP_SRV_IP -l 60 -- -r 64,1024"
+	done
 ;;
 ?)
 	echo "Unknow argument"
