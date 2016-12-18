@@ -1,0 +1,5 @@
+USER_NAME="huangdaode"
+REMOTE_IP="192.168.1.107"
+KERNEL_DIR="kernel-dev"
+UEFI_DIR="uefi"
+ROOTFS_DIR="hulk_rootfs"
