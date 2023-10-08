@@ -1,0 +1,15 @@
+@echo off
+setlocal enabledelayedexpansion
+rem 设置目录路径和需要替换的文本
+set "directory=C:\Users\Administrator\Downloads\1_Reading+in+October(With+Rachel)"
+set "replace=ce5068ee-aa52-42a2-896c-2963404ef98a.pdf"
+set "newtext="
+rem 遍历目录中的所有文件并重命名
+for %%a in ("%directory%\*%replace%*") do (
+    set "filename=%%~na"
+    set "extension=%%~xa"
+    set "newname=!filename:%replace%=%newtext%!!extension!"
+    ren "%%a" "!newname!"
+)
+echo File names updated.
+pause
